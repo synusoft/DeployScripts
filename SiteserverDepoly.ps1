@@ -1,10 +1,12 @@
 # 此脚本是帮助siteserver初始化IIS_IUSRS和NETWORK SERVICE目录的权限，安装IIS服务以及添加端口防火墙例外
-# FolderName是文件夹名称，如果为当前目录，输入"."
+# FolderName是文件夹名称，如果为当前目录，输入"."，否则填写绝对路径
 $FolderName = "."
 # DisplayName 是在IIS和防火墙配置显示的标识符，应当唯一
 $DisplayName = "CMSv5_89"
 # PortNo 是站点端口号(1-65535)
 $PortNo = "89"
+
+if($FolderName -eq "."){$AbsolatePath=(Get-Location).Path}else{$AbsolatePath=$FolderName}
 
 # 配置目录权限
 $acl = Get-Acl $FolderName
@@ -37,7 +39,7 @@ New-Item iis:\AppPools\$DisplayName
 #更改应用程序池版本为4.0
 Set-ItemProperty iis:\AppPools\$DisplayName managedRuntimeVersion v4.0
 #新建站点 $DisplayName
-New-Item iis:\Sites\$DisplayName -bindings @{protocol="http";bindingInformation="*:"+$PortNo+":"} -physicalPath $FolderName
+New-Item iis:\Sites\$DisplayName -bindings @{protocol="http";bindingInformation="*:"+$PortNo+":"} -physicalPath $AbsolatePath
 #为站点更改应用程序池
 Set-ItemProperty IIS:\Sites\$DisplayName -name applicationPool -value $DisplayName
 
