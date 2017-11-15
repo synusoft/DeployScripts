@@ -6,7 +6,19 @@ $DisplayName = "CMSv5_89"
 # PortNo 是站点端口号(1-65535)
 $PortNo = "89"
 
+
+
 if($FolderName -eq "."){$AbsolatePath=(Get-Location).Path}else{$AbsolatePath=$FolderName}
+
+# start as Admin
+$currentWi = [Security.Principal.WindowsIdentity]::GetCurrent()
+$currentWp = [Security.Principal.WindowsPrincipal]$currentWi
+if( -not $currentWp.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+{
+    $currentFile = (Resolve-Path  $MyInvocation.InvocationName).Path
+    Start-Process "$psHome\powershell.exe"   -ArgumentList "$currentFile" -verb runas
+    return
+}
 
 # 配置目录权限
 $acl = Get-Acl $FolderName
@@ -33,7 +45,6 @@ Set-Acl $FolderName $acl
 #创建IIS站点
 #导入IIS管理模块
 Import-Module WebAdministration
-
 #新建应用程序池 $DisplayName
 New-Item iis:\AppPools\$DisplayName
 #更改应用程序池版本为4.0
@@ -46,3 +57,7 @@ Set-ItemProperty IIS:\Sites\$DisplayName -name applicationPool -value $DisplayNa
 #创建防火墙例外规则
 New-NetFirewallRule -Name $DisplayName-$PortNo-tcp-in -Direction Inbound -DisplayName $DisplayName -LocalPort $PortNo -Protocol 'TCP'
 New-NetFirewallRule -Name $DisplayName-$PortNo-tcp-out -Direction Outbound -DisplayName $DisplayName -LocalPort $PortNo -Protocol 'TCP'
+
+Write-Host  配置完成
+Read-Host
+#endregion
